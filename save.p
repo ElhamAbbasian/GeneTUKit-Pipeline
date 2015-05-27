@@ -1,0 +1,44 @@
+(dp0
+S'23215050'
+p1
+(dp2
+S'OATP1B3 variant 1'
+p3
+S'Q9NPD5,B3KP78'
+p4
+sS'OATP1B3'
+p5
+S'Q9NPD5,B3KP78'
+p6
+sS'CCK-8'
+p7
+S'E9QEB3'
+p8
+sS'OATP1B3 protein'
+p9
+S'Q9NPD5,B3KP78'
+p10
+sS'OATP1B3 V1'
+p11
+S'Q9NPD5,B3KP78'
+p12
+sS'OATP1B3 WT'
+p13
+S'Q08CU4'
+p14
+ssS'24842107'
+p15
+(dp16
+S'integrin-beta1'
+p17
+S'F1QG85,Q3YAA1'
+p18
+sS'sialyltransferase'
+p19
+S'Q9GU23,Q9W121'
+p20
+sS'integrin-beta1-mediated'
+p21
+S'P12606'
+p22
+ss.
