@@ -12,9 +12,10 @@
 #according to the pmids in "tbl_pmids_in_file" form "Pancreatic_cancer_db" try to download the abstract titles from "tbl_medline_citation" and abstract texts
 #from "tbl_abstract"
 
-#psycopg is the most popular PostgreSQL DB adaptor for Python. psycopg2 has both client-side and server-side cursors.
+# to connect to the PostgreSQL database
 import psycopg2
 from psycopg2 import extras
+
 import os
 import subprocess
 import re
@@ -88,18 +89,20 @@ if __name__=="__main__":
 
     parser= OptionParser()
     parser.add_option("-i", "--input", dest="i", help='name of the input file containing pmids',default="pubmed_result.txt")
-
+    parser.add_option("-o", "--output", dest="o", help='name of the output folder containing all downloaded abstracts',default="downloaded_abstracts")
+    parser.add_option("-d", "--database", dest="d", help='name of the database to connect to',default="pancreatic_cancer_db")
     (options,args)=parser.parse_args()
 
     #save parameters in an extra variable
     input_pmid = options.i
+    output_directory = options.o
 
     #settings for psql connection
     postgres_user       ="parser"
     postgres_password   ="parser"
     postgres_host       ="localhost"
     postgres_port       ="5432"
-    postgres_db         ="pancreatic_cancer_db" 
+    postgres_db         =options.d
 
     #connect
     postgres_connection , postgres_cursor = connect_postgresql()
@@ -114,7 +117,7 @@ if __name__=="__main__":
 
     pmids_file.close()
 
-    #runing throgh all pmids, get each title and each abstract text , try to taged them and save in a .nxml file .
+    #runing throgh all pmids, get each title and each abstract text , try to tagged them and save in a .nxml file .
     for pmid in pmids_list :
         
         abstract_text = get_abstract(postgres_cursor,pmid)
@@ -133,23 +136,22 @@ if __name__=="__main__":
                 abstract_title[0] = re.sub("&","&amp;",abstract_title[0])
 
             #add XML tags to the beginnign and end of abstract file
-            abstract_taged = add_xml_tag(abstract_text[0],abstract_title[0])
+            abstract_tagged = add_xml_tag(abstract_text[0],abstract_title[0])
 
-            #repeatedly must make a .nxml file , which it'S name , contain respective pmid .
+            # save each abstracts with its title in an extra file
             nxml_file = pmid+".nxml"
             nxml_file="".join(nxml_file.split("\n"))
-            #open this file to write on it .
-            nxml_file_w = open(nxml_file,"w")
-    
-            #save downloaded abstract into our output .nxml file 
-            nxml_file_w.write(abstract_taged)
+            # write to file in the declared output folder
+            nxml_file_w = open(os.path.join(output_directory,nxml_file),"w")
+   
+            nxml_file_w.write(abstract_tagged)
             nxml_file_w.close()
 
         else :
             invalid_pmid_list =[]
             invalid_pmid_list.append(pmid)
 
-    #disconnect
+    # disconnect
     disconnect_postgresql(postgres_connection, postgres_cursor)
 
 
