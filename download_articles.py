@@ -54,7 +54,7 @@ def get_abstract(cursor,pmid):
 def add_xml_tag(title,abstract):
     if abstract:
         # add xml tags for title and text
-        abstract = "<article><article-meta><title>"+ escape(title) + "</title><abstract><p>" + escape(abstract) + "</p></abstract></article-meta></article>"
+        abstract = "<article><article-meta><article-title>"+ escape(title) + "</article-title><abstract><p>" + escape(abstract) + "</p></abstract></article-meta></article>"
     else:
         # add the title in abstract text XML tags without the title tag
         abstract = "<article><article-meta><abstract><p>" + escape(title) + "</p></abstract></article-meta></article>"
