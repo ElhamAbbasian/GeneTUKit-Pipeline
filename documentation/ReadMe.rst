@@ -26,29 +26,29 @@ Download of PubMed Abstracts
 
 - The title and abstract part of requested PubMed XML documents can be accessed with PubMed2Go:
 
-    - https://github.com/KerstenDoering/PubMed2Go
+    - https://github.com/KerstenDoering/PubMed2Go/wiki
 
 - The PubMed2Go documentation shows how to download a data set and build a PostgreSQL relational database. Follow the installation instructions. The part describing how to build a Xapian full text index is not needed here:
 
     - https://github.com/KerstenDoering/PubMed2Go/blob/master/documentation/quick_install.rst
 
-- This documentation refers to the PubMed2Go example data set processing texts dealing with the disease pancreatic cancer.
+- This documentation refers to the PubMed2Go example data set processing texts which deal with the disease pancreatic cancer.
 
-- The two randomly selected abstracts with the PubMed-IDs 23215050 and 24842107 are selected from the PostgreSQL database and saved in the folder downloaded_abstracts in pseudo XML format. The script download_articles.py reads the file pubmed_id.txt which contains these two IDs.
+- The script download_articles.py reads the PubMed IDs in the file pubmed_result.txt. Four randomly selected abstracts with the PubMed IDs 10025831, 23215050, 24622518, and 24842107 were selected from the PostgreSQL database and saved in the folder downloaded_abstracts in pseudo XML format using this script. 
 
-- It is recommended to run this script in a separated subdirectory in order to have all NXML files together in an extra folder. The script can be run from this subdirectory:
-
-    - python ../download_articles.py -i ../pubmed_id.txt
+    - The script can be run with "python download_articles.py" and modified with the name of the database, output folder, and input file (use "python download_articles.py -h" for more information).
 
 - Unfortunately, the plain text parameter in GeneTUKit does not work. That is the reason for using pseudo XML files. These XML tags are required to run GeneTUKit in XML mode and to recognise the title and text separately.
 
-- The following steps cannot only be applied to PubMed XML abstracts, but any texts that are given in NXML format.
+- The following steps cannot only be applied to PubMed XML abstracts, but to any texts that are given in NXML format.
 
 - NXML is a data structure used in BioCreAtIvE III and the example on the GeneTUKit homepage refers to this document:
 
     - http://www.qanswers.net/download/genetukit/1934391.nxml
 
-- The mandatory XML structure used by GeneTUKit is <article><article-meta><title> TITLE </title><abstract><p> ABSTRACT </p></abstract></article-meta></article>.
+- The mandatory XML structure used by GeneTUKit is <article><article-meta><article-title> TITLE </article-title><abstract><p> ABSTRACT </p></abstract></article-meta></article>.
+
+- If no abstract text is provided by PubMed, the structure is <article><article-meta><abstract><p> TITLE </p></abstract></article-meta></article>. In this special case, the title has to be encoded within the abstract tags to be recognised by GeneTUKit.
 
 - In XML documents, certain characters are not allowed in normal text, e.g. "<" and "&". Therefore they are escaped by the script and replaced with their ASCII codes.
 
@@ -65,7 +65,7 @@ Gene/Protein Extraction wit GeneTUKit
 
 - To install GeneTUKit, follow the first four steps of GeneTUKit's help page, reachable at http://www.qanswers.net/GeneTUKit/help.html.
 
-- As it has mentioned in its Readme.txt, it is possible to install the GeneTUKit on MySQL or PostgreSQL databases. In this pipeline, the MySQL version was tested. The modified config file should look like this:
+- As it is mentioned in its Readme.txt, it is possible to install the GeneTUKit on MySQL or PostgreSQL databases. In this pipeline, the MySQL version was tested. The modified config file should look like this:
 
      host name:
      DATABASE_HOST=localhost
@@ -88,21 +88,21 @@ Gene/Protein Extraction wit GeneTUKit
      database driver:
      DATABASE_DRIVER_CLASS=com.mysql.jdbc.Driver
 
-- Install the latest MySQL database client and server version. Possibly, the extra download of the jdbc driver JAR package for this database engine is needed. In this case, the JAR file needs to be renamed  to jdbc-driver.jar and copied into the lib folder of GeneTUKit.
+- Install the latest MySQL database client and server version. Possibly, the extra download of the jdbc driver JAR package for this database engine is needed. In this case, the JAR file needs to be renamed to jdbc-driver.jar and copied into the lib folder of GeneTUKit.
 
-- Running GeneTUKit with a single NXML file works as follows:
+- Copy the folder downloaded_abstracts with the NXML files generated in the last section into the new GeneTUKit directory.
 
-    - java -Djava.library.path=. -jar genetukit.jar -x downloaded_abstracts/23215050.nxml
+- GeneTUKit is using CRF++ for NER (Name Entity Recognition), but the link provided by the just mentioned GeneTUKit page leads to a repository requiring a password. It's also possible to use BANNER for this purpose. Running GeneTUKit with a single NXML file (with BANNER) works as follows:
+
+    - java -Djava.library.path=. -jar genetukit.jar -x downloaded_abstracts/23215050.nxml -banner
 
 - If you want to process multiple files at ones, use the batch mode by providing the folder name instead of a file name:
 
-        - java -Djava.library.path=. -jar genetukit.jar -x downloaded_abstracts
+        - java -Djava.library.path=. -jar genetukit.jar -x downloaded_abstracts -banner
 
-- GeneTUKit is using CRF++ for NER (Name Entity Recognition), but it's possible to install and use BANNER for this purpose:
+- With ">", the output is piped to the output file gtk_output.csv and the Java library path can probably be omitted:
 
         - java -jar genetukit.jar -x downloaded_abstracts -banner > gtk_output.csv
-
-        - With ">", the output is piped to the output file gtk_output.csv.
 
 - The running time for this step on a test data set of 5000 abstracts was around 5 h with a 2 GHz single core CPU. 
 
@@ -111,7 +111,7 @@ Gene/Protein Extraction wit GeneTUKit
 Modifying the GeneTUKit output
 ******************************
 
-- From the output given by GeneTUKit (e.g. gtk_output.csv), the required values PubMed-ID, gene ID and the synonyms are saved in a new CSV file named pmid_geneid_syn.csv:
+- From the output given by GeneTUKit (e.g. gtk_output.csv), the required values PubMed ID, gene ID and the synonyms are saved in a new CSV file named pmid_geneid_syn.csv:
 
     - python filter_out_genetukit_output.py -i gtk_output.csv
 
@@ -119,22 +119,22 @@ Modifying the GeneTUKit output
 
 
 **********************************
-Mapping of UniProt-IDs to Gene IDs
+Mapping of UniProt IDs to Gene IDs
 **********************************
 
-- Each gene ID provided by GeneTUKit has to be mapped to its respective UniProt-ID. Using UniProt-IDs brings up the advantage of directly accessing their sequenes. The UniProt-IDs are contained in idmapping.dat.gz. This file can be downloaded here:
+- Each gene ID provided by GeneTUKit has to be mapped to its respective UniProt ID. Using UniProt IDs brings up the advantage of directly accessing their sequenes. The UniProt IDs are contained in idmapping.dat.gz. This file can be downloaded here:
 
     - ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/idmapping/
 
-    - The file idmapping.dat.gz also contains some unrelated information. By running filter_idmapping.py, only the related gene IDs and UniProt-IDs are saved in "filtered_idmapping.csv" file. The converted file is saved in the main directory.
+    - The file idmapping.dat.gz also contains some unrelated information. By running filter_idmapping.py, only the related gene IDs and UniProt IDs are saved in "filtered_idmapping.csv" file. The converted file is saved in the main directory.
 
-- The process of mapping gene IDs from pmid_geneid_syn.csv to UniProt-IDs is done by map_geneid_to_uniprotid.py. By running this script, map_to_dict.py is used to build a dictionary from filtered_idmapping.csv. 
+- The process of mapping gene IDs from pmid_geneid_syn.csv to UniProt IDs is done by map_geneid_to_uniprotid.py. By running this script, map_to_dict.py is used to build a dictionary from filtered_idmapping.csv. 
 
 - It generates two output files.
 
-    - The first file is merged_file.csv, which contains the mapped gene IDs and UniProt-IDs for each PubMed-ID with all identified synonyms.
+    - The first file is merged_file.csv, which contains the mapped gene IDs and UniProt IDs for each PubMed ID with all identified synonyms.
 
-    - The second file is a dictionary data structure (Python pickle file save.p) which contains all triples of PubMed-ID, synonym, and UniProt-ID.
+    - The second file is a dictionary data structure (Python pickle file save.p) which contains all triples of PubMed ID, synonym, and UniProt ID.
 
 - The script can be run without additional parameters:
 
@@ -149,7 +149,7 @@ Annotation of PubMed Abstracts
 
     - python annotate_abstracts.py -i downloaded_abstracts
 
-- The script takes the path to the downloaded pseudo XML texts specified by the parameter "-i" and the list of synonym-UniProt-ID pairs saved in the dictionary save.p from the last step. The tagged abstract titles and texts are saved tab-separated in a CSV file named annotated_abstracts.csv, each row a new PubMed-ID (without pseudo XML tags).
+- The script takes the path to the downloaded pseudo XML texts specified by the parameter "-i" and the list of synonym-UniProt ID pairs saved in the dictionary save.p from the last step. The tagged abstract titles and texts are saved tab-separated in a CSV file named annotated_abstracts.csv, each row a new PubMed ID (without pseudo XML tags).
 
 - All abstract texts and titlse are separately searched for each synonym. The implementation takes care for nested tags in a way that it only highlights the longest matching synonym (function remove_nested_tagging()).
 
