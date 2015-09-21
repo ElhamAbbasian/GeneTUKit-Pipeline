@@ -1,11 +1,18 @@
-Results for /home/kersten/genetukit/GeneTUKit/abstracts-group1/24842107.nxml :			
-117189	GD3	9606	0.2599549338
-556734	integrin-beta1	7955	0.1348010583
-37950	sialyltransferase	7227	0.0945648383
-397755	integrin-beta1-mediated	8355	0.0746958143
-14001	GD3-induced	10090	0.0062997722
-			
-Results for /home/kersten/genetukit/GeneTUKit/abstracts-group1/23215050.nxml :			
-28234	OATP1B3|OATP1B3 protein|OATP1B3 variant 1|OATP1B3 V1	9606	0.3838721131
-100007763	CCK-8	7955	0.1940360051
-568416	OATP1B3 WT	7955	0.054504675
+Results for /home/kersten/GeneTUKit-Pipeline/GeneTUKit/downloaded_abstracts/24622518.nxml :
+444176	BRG1	8355	0.2214761740477017
+
+Results for /home/kersten/GeneTUKit-Pipeline/GeneTUKit/downloaded_abstracts/24842107.nxml :
+117189	GD3	9606	0.24140952331567783
+37950	sialyltransferase	7227	0.08564457259932315
+556734	integrin-beta1-mediated|integrin-beta1	7955	0.08391165115758648
+25280	GD3-synthase	10116	0.04924977709656911
+14001	GD3-induced	10090	0.006338090490960053
+
+Results for /home/kersten/GeneTUKit-Pipeline/GeneTUKit/downloaded_abstracts/10025831.nxml :
+23583	FDG	9606	0.35480630323343704
+
+Results for /home/kersten/GeneTUKit-Pipeline/GeneTUKit/downloaded_abstracts/23215050.nxml :
+28234	SLCO1B3 gene|OATP1B3|OATP1B3 protein|OATP1B3 variant 1|OATP1B3 V1	9606	0.9280929235515446
+100007763	CCK-8	7955	0.18804899137961603
+568416	OATP1B3 WT	7955	0.05351681204313328
+
