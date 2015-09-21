@@ -63,32 +63,13 @@ Gene/Protein Extraction wit GeneTUKit
 
 - There is also a link providing the latest EntrezGene data set (gene_info.gz). This file has to be downloaded and copied into the EntrezGene directory of the downloaded GeneTUKit folder.
 
-- To install GeneTUKit, follow the first four steps of GeneTUKit's help page, reachable at http://www.qanswers.net/GeneTUKit/help.html.
+- To install GeneTUKit, step one and three from the official help page (http://www.qanswers.net/GeneTUKit/help.html) are mandatory for using the pipeline presented herein.
 
-- As it is mentioned in its Readme.txt, it is possible to install the GeneTUKit on MySQL or PostgreSQL databases. In this pipeline, the MySQL version was tested. The modified config file should look like this:
+- In this pipeline, the GeneTUKit installation with the default MySQL version was tested. Therefore, the GeneTUKit config file does not have to be changed.
 
-     host name:
-     DATABASE_HOST=localhost
+    - It is possible to connect to a MySQL database via command-line with "mysql -u root -p".
 
-     database name:
-     DATABASE_NAME=EntrezGene
-
-     username:
-     DATABASE_USERNAME=genetukit
-
-     password:
-     DATABASE_PASSWORD=12345
-
-     the table to store the gene data:
-     DATABASE_GENEINFO_TABLE_NAME=gene_info
-
-     database engine:
-     DATABASE_DRIVER_NAME=mysql
-
-     database driver:
-     DATABASE_DRIVER_CLASS=com.mysql.jdbc.Driver
-
-- Install the latest MySQL database client and server version. Possibly, the extra download of the jdbc driver JAR package for this database engine is needed. In this case, the JAR file needs to be renamed to jdbc-driver.jar and copied into the lib folder of GeneTUKit.
+- Install the latest MySQL database client and server version. Although the GeneTUKit documentation recommends the extra download of the jdbc driver JAR package for this database engine, this was not needed in the test system with Ubuntu 14.04 LTS.
 
 - Copy the folder downloaded_abstracts with the NXML files generated in the last section into the new GeneTUKit directory.
 
@@ -111,30 +92,32 @@ Gene/Protein Extraction wit GeneTUKit
 Modifying the GeneTUKit output
 ******************************
 
-- From the output given by GeneTUKit (e.g. gtk_output.csv), the required values PubMed ID, gene ID and the synonyms are saved in a new CSV file named pmid_geneid_syn.csv:
+- From the output given by GeneTUKit (e.g. GeneTUKit/gtk_output.csv), the required values PubMed ID, gene ID, and the synonyms are saved in a new CSV file named pmid_geneid_syn.csv ("python filter_out_genetukit_output.py", executed from the original GitHub project folder GeneTUKit-Pipeline)
 
-    - python filter_out_genetukit_output.py -i gtk_output.csv
+    - The default parameters can be shown with parameter "-h".
 
-- GeneTUKit also provides organism IDs and a score for how likely each prediction is. These values are not further processed in this script, but it is reasonable to consider especially the prediction score.
+- GeneTUKit also provides an organism ID and a score for each prediction's certainty. These values are not further processed in this script, but it is reasonable to consider especially the prediction score.
 
 
 **********************************
 Mapping of UniProt IDs to Gene IDs
 **********************************
 
-- Each gene ID provided by GeneTUKit has to be mapped to its respective UniProt ID. Using UniProt IDs brings up the advantage of directly accessing their sequenes. The UniProt IDs are contained in idmapping.dat.gz. This file can be downloaded here:
+- Each gene ID provided by GeneTUKit has to be mapped to its respective UniProt ID. Using UniProt IDs brings up the advantage of being able to access their sequenes (http://www.uniprot.org). The UniProt IDs are contained in idmapping.dat.gz. This file can be downloaded here and has to be extracted in the main project folder (GeneTUKit-Pipeline):
 
     - ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/idmapping/
 
-    - The file idmapping.dat.gz also contains some unrelated information. By running filter_idmapping.py, only the related gene IDs and UniProt IDs are saved in "filtered_idmapping.csv" file. The converted file is saved in the main directory.
+    - The file idmapping.dat.gz also contains some unrelated information. By running filter_idmapping.py with the option "-t", only the related gene IDs and UniProt IDs from pmid_geneid_syn.csv are saved in "filtered_idmapping.csv". The converted file is also saved in the main directory.
 
-- The process of mapping gene IDs from pmid_geneid_syn.csv to UniProt IDs is done by map_geneid_to_uniprotid.py. By running this script, map_to_dict.py is used to build a dictionary from filtered_idmapping.csv. 
+    - The option of using the test case with a small number of gene IDs was used to complete the example presented in this documentation. In general, all gene IDs are needed to extract the appropriate UniProt ID from idmapping.dat.
 
-- It generates two output files.
+- The mapping process of storing PubMed ID, (mapped) gene ID, synonym(s), and UniProt ID(s) for each different synonym is executed with map_geneid_to_uniprotid.py.
 
-    - The first file is merged_file.csv, which contains the mapped gene IDs and UniProt IDs for each PubMed ID with all identified synonyms.
+- The script reads the file filtered_idmapping.csv by importing the script map_to_dict.py, which creates a dictionary data structure, containing the gene IDs as keys and the UniProt IDs as values.
 
-    - The second file is a dictionary data structure (Python pickle file save.p) which contains all triples of PubMed ID, synonym, and UniProt ID.
+    - This dictionary is used to create the output file merged_file.csv with one line per synonym (tab-separated): PubMed ID, gene ID, synonym, UniProt ID(s).
+
+    - The script also creates a second file is which is a dictionary of dictionaries from PubMed IDs, containing all synonyms of an abstract as keys with all UniProt IDs as values. This output is stored as the Python pickle file "save.p" to be used within the next pipeline step.
 
 - The script can be run without additional parameters:
 
