@@ -3,86 +3,75 @@
 
 """
     Copyright (c) 2015, Elham Abbasian <e_abbasian@yahoo.com>, Kersten Doering <kersten.doering@gmail.com>
+
+    This script reads the output of GeneTUKit and extracts the PubMed IDs with identified gene IDs and synonyms.
 """
-
-#Elham 03.11.2014
-#in this script should read the output of GeneTUKit , the big file , extract the pmids and list of geneid and synonyms for each pmids and save
-#in a table in SQL as a three tuple row .
-
-#psycopg is the most popular PostgreSQL DB adaptor for Python. psycopg2 has both client-side and server-side cursors.
-import psycopg2
-from psycopg2 import extras
-import os
-import subprocess
-import re
 
 #optparse - Parser for command line options
 from optparse import OptionParser
 
-def filterout_inputfile(GTK_input):
-
-    #define a patern for the first line of each part in GTK output file ,
-    patern1 = re.compile('^Results.*(\d{8})$')
-
-    #define the second patern , which appears in some lines ,
-    patern2 = re.compile ('^\.nxml$')
-    
-    #define an empty 2D list to save the tuples of pmid...geneid...synonyms
-    GTK_list = []
-
-    #find the lines which starts with "Results for" and contains PMID for each of the runs
-    for line in GTK_input:
-        p_obj = re.search('.[/](\d{4,})' ,line ,re.IGNORECASE)
-        n_obj = re.search('.nxml' ,line ,re.IGNORECASE)
-
-        if p_obj:
-            pmid = p_obj.group(1)
+# the code to return a list is commented out - the file can be written directly
+# if the user wants to upload the triples to a PostgreSQL database directly within this script, the usage of lists can be extended with SQL commands
+# another approach is to use the bulkloader with the resulting CSV file
+def filterout_inputfile(gtk_input, outfile):
+    # list for saving lists of triples: PubMed ID, gene ID, and synonym
+#    gtk_list = []
+    #find the lines which start with "Results for" and store a list with three entries for each identified gene or protein: PubMed ID, gene ID (temp[0]), synonym (temp[1])
+    for line in gtk_input:
+        # get file name which contains the PubMed ID - split function: slashes and dots
+        # e.g.: Results for /home/kersten/GeneTUKit-Pipeline/GeneTUKit/downloaded_abstracts/23215050.nxml :
+        # multiple synonyms for the same gene ID are separated with a pipe ("|"), but not splitted within this script
+        if "Results for" in line:
+            pmid = line.split("/")[-1].split(".")[0]
             print "current pmid=",pmid
-
-        elif n_obj:
-            continue
-
+        # empty line
         elif (len(line.strip()) == 0):
             continue
-
+        # store triple (in output file)
         else :
             temp = line.strip().split("\t")
-            #define a 2D list , each row has three columns which are (pmid....geneid....synonyms)
-            #for each new tuple should define a new list inside the GTK_list
-            GTK_list.append([pmid,temp[0],temp[1]])
+            # pmid: PubMed ID, temp[0]: gene ID, temp[1]: synonym
+#            gtk_list.append([pmid,temp[0],temp[1]])
+            outfile.write(pmid + "\t" + temp[0] + "\t" + temp[1] + "\n")
+#    return GTK_list
 
-    return GTK_list
-
-###########################################MAIN PART OF THE SCRIPT ################################################
+### MAIN PART OF THE SCRIPT ###
 
 if __name__=="__main__":
 
     parser= OptionParser()
-    parser.add_option("-i", "--input", dest="i", help='name of the input file which is GeneTUKit ouput file',default="gtk_output.csv")
+    parser.add_option("-i", "--input", dest="i", help='name of the input file which is GeneTUKit ouput file',default="GeneTUKit/gtk_output.csv")
+    parser.add_option("-o", "--output", dest="o", help='name of the output file which is GeneTUKit ouput file',default="pmid_geneid_syn.csv")
 
     (options,args)=parser.parse_args()
 
     #save parameters in an extra variable
     input_file = options.i
+    output_file = options.o
 
-    #open GeneTUKit input file , which contains output of genetukit itself for all 20,000 abstract file .
-    GTK_input = open (input_file , "r")
+    # open input (which contains the output of GeneTUKit for the given number of abstract files) and output file
+    gtk_input = open (input_file, "r")
+    outfile = open(output_file,"w")
+    filterout_inputfile(gtk_input,outfile)
+    gtk_input.close()
+    outfile.close()
+
+"""
+# use lists and iterate over each entry to generate the output file
     genetukit_list = filterout_inputfile(GTK_input)
-
-
-    #write all the inner lists into a file , in a way that will poduce a big file .
-    PGS =open("pmid_geneid_syn.csv","w") 
+    #write all the inner lists into a file, in a way that one big file is produced
+    outfile =open("pmid_geneid_syn.csv","w") 
     
     rows=len(genetukit_list)
     columns = 3
 
     for i in range(rows) :
         for j in range(columns) :
-            PGS.write(genetukit_list[i][j]+"\t")
-        PGS.write("\n")
+            outfile.write(genetukit_list[i][j]+"\t")
+        outfile.write("\n")
 
-    PGS.close()
-
+    outfile.close()
+"""
 
 
 
