@@ -103,7 +103,7 @@ Modifying the GeneTUKit output
 Mapping of UniProt IDs to Gene IDs
 **********************************
 
-- Each gene ID provided by GeneTUKit has to be mapped to its respective UniProt ID. Using UniProt IDs brings up the advantage of being able to access their sequenes (http://www.uniprot.org). The UniProt IDs are contained in idmapping.dat.gz. This file can be downloaded here and has to be extracted in the main project folder (GeneTUKit-Pipeline):
+- Each gene ID provided by GeneTUKit has to be mapped to its respective UniProt ID. Using UniProt IDs brings up the advantage of being able to access their sequenes (http://www.uniprot.org). The UniProt IDs are contained in idmapping.dat.gz. This file has to be extracted in the main project folder (GeneTUKit-Pipeline) and can be downloaded here:
 
     - ftp://ftp.ebi.ac.uk/pub/databases/uniprot/current_release/knowledgebase/idmapping/
 
