@@ -3,122 +3,79 @@
 
 """
     Copyright (c) 2015, Elham Abbasian <e_abbasian@yahoo.com>, Kersten Doering <kersten.doering@gmail.com>
+
+    This script selects all available UniProt IDs from the dictionary based on filtered_idmapping.csv, which is implicitly built by importing idmapping from map_to_dict.py. Furthermore, it writes the dictionary save.p which is dictionary of dictionaries to save the UniProt IDs for each synonym for each PubMed ID. This data structure will be used by annotate_abstracts.py. The output file merged_file.csv contains one gene or protein name per line with the tab-separated entries PubMed ID, gene ID, synonym, UniProt ID(s).
 """
 
-#Elham 05.11.2014
-#in this script I will try to fetch "Uniprotids" from idmapping dictionary ,
-#for all geneids that are mentioned in "pmid_geneid_syn.csv" file , and add the 
-#related uniprotids to them .in a way that in new file we will have 
-# "pmid geneid synonyms uniprotids"
-
-#import idmapping Dictionary from maptodict.py which has such pair of geneid:uniportids
+# import dictionary idmapping (created while importing) from maptodict.py (gene ID : UniProt IDs)
 from map_to_dict import idmapping
+# to write a binary Python file (pickle)
 import pickle
 
-#Function to add related idmappings to each line of "pmid_geneid_syn.csv" file
-def merge_GTKoutput_idmapping(PGS,idmapping):
-
-    #go through all lines in PGS input file to search for existing Geneids in idmapping dictionary . 
-    #try:
-    for line in PGS:
+# main part of the script
+if __name__=="__main__":
+    # open input file with PubMed ID, gene ID, and synonym(s) (separated with "|")
+    infile = open ("pmid_geneid_syn.csv","r")
+    # part of the possible false positive synonyms from GeneTUKit
+    black_list=['Protein','id','Id']
+    # merged output file with PubMed ID, gene ID, synonym, UniProt ID(s)
+    outfile = open("merged_file.csv","w")
+    # not yet used:
+    # define a dictionary to save the pairs synonym : UniProt ID(s)
+#    syndict={}
+    # define a dictionary of dictionaries pmiddict[pmid] = {synonym:[UniProt ID(s)]}
+    pmiddict={}
+    # read input file
+    for line in infile:
+        # tab-separated input format
         temp = line.strip().split("\t")
-
+        # first column PubMed ID
         pmid = temp[0]
+        # second column gene ID
         geneid = temp[1]
+        # third column synonym(s) 
         synonyms = temp[2]
-
+        # if a gene ID is contained in the dictionary idmapping, it will be processed
         if (geneid in idmapping):
-            #check if there is more than one synonyms for this geneid , if yes they should be saved in different rows.
+            # check if there is more than one synonym for a gene ID (separated with "|"),
+            # if yes they should be splitted and written to merged_file.csv with one synonym per line
             l_synonyms = synonyms.strip().split("|")
-
+            # iterate over the list of synonyms
             for item in l_synonyms:
-                final_line = pmid+"\t"+geneid +"\t"+item+"\t"
-
-                if (len(idmapping[geneid]) == 1):
-                    final_line = final_line+idmapping[geneid][0]
-                    Final_f.write(final_line+"\n")
-
-                elif (len(idmapping[geneid]) > 1):
-                    Final_f.write(final_line+",".join(idmapping[geneid])+"\n")
-
+                # check whether molecule name is contained in the blacklist
+                if not item in black_list:
+                    # string that should be written to file as one line
+                    final_line = pmid+"\t"+geneid +"\t"+item+"\t"
+                    # if there is only one UniProt ID, add it to the string
+                    if (len(idmapping[geneid]) == 1):
+                        uproid = idmapping[geneid][0]
+                        final_line = final_line + uproid
+                        outfile.write(final_line+"\n")
+                    # if there are several UniProt IDs, concatenate them comma-separated
+                    elif (len(idmapping[geneid]) > 1):
+                        uproid = ",".join(idmapping[geneid])
+                        outfile.write(final_line + uproid + "\n")
+                    # add a new dictionary to the dictionary pmiddict
+                    # add the synonym (item) and the UniProt IDs
+                    if not pmid in pmiddict:
+                        pmiddict[pmid]={}
+                        pmiddict[pmid][item]=uproid
+                    # if the PubMed ID is already contained in pmiddict, just add the 
+                    elif not item in pmiddict[pmid]:
+                        pmiddict[pmid][item]=uproid
+                    # if the synonym appears twice with different UniProt IDs (possible?)
+                    else:
+                        print pmiddict[pmid][item], pmid, item, uproid
+                else:
+                    print pmid, item, "blacklisted"
+        # gene ID not found in idmapping
         else:
             print "missing Gene-ID in idmapping =",geneid
-    #except:
-        #print "Genetukit output File Name =",PGS
-    Final_f.close()
+    outfile.close()
+    # debug:
+#    print len(pmiddict)
 
-    #read the created Final_f.csv file and make a dictionary out of it: of "synonym : Uniprotid"
-    r_Final_f = open ("merged_file.csv","r")
-    
-    black_list=['Protein','id','Id']
-#    for line in r_Final_f:
-#        temp = line.strip().split("\t")
-#        syn = temp[2]
-#        if not syn in black_list :
-#            if not syn in syndict :
-#                syndict[syn]=[temp[3]]
-#            else :
-#                syndict[syn].append(temp[3])
-
-#    #for loop over syndict dictionary to save all the lines in a .csv file .
-#    for key in syndict :
-#        #should delete all repeated uniprotids fo each synonym
-#        syndict[key]=list(set(syndict[key]))
-#        upid = ",".join(list(set(syndict[key])))
-#        syndict_file.write(key+"\t"+upid+"\n")
-
-
-    #Elham 13.01.2015
-    #this new part is going to make a dictionary of dictionary , whose keys are pmids and it's values are another dictionary with synonym:unipotids pairs as key:value pair.
-    #I use merged_file.csv file except second column which is geneid .
-
-    #go over all lines of merged_file.csv , check the same pmids and fetch synonyms:uniprotids .
-    for line in r_Final_f:
-        temp = line.strip().split("\t")
-        pmid = temp[0]
-        syn = temp[2]
-        uproid = temp[3]
-
-        if not syn in black_list :
-            if not pmid in pmiddict :
-                pmiddict[pmid]={}
-                pmiddict[pmid][syn]=uproid
-            else:
-                pmiddict[pmid][syn]=uproid
-
-#    for key in pmiddict:
-#        syndict_file.write(key+"\t"+str(pmiddict[key]))
-#        syndict_file.write("\n")
-
-        #print key
-
-    return
-###########################################MAIN PART OF THE SCRIPT ################################################
-
-if __name__=="__main__":
-
-    #open the "pmid_geneid_syn.csv" file , and send it to the function.
-    PGS = open ("pmid_geneid_syn.csv","r")
-    
-    #make another file , for final-merged file
-    Final_f = open("merged_file.csv","w")
-    
-    #make a .csv file for saving syndict in it , for using in bulkloader later .
-#    syndict_file = open ("syndict_bulkloader.csv","w")
-
-    #define a dictionary to save the synonym : Uniprotids pair
-    syndict={}
-
-    #define a dictionary of dictionary
-    pmiddict={}
-
-    merge_GTKoutput_idmapping(PGS,idmapping)
-    Final_f.close()
-#    syndict_file.close()
-
-    print len(pmiddict)
-
-    #save the syndict dictionary into a pickle file , in such that can be use later .
+    #save the pmiddict dictionary into a pickle file (Python binary file) to be used within the next pipeline step
     pickle.dump(pmiddict,open("save.p","wb"))
 
 

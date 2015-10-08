@@ -6,39 +6,57 @@ S'OATP1B3 variant 1'
 p3
 S'Q9NPD5,B3KP78'
 p4
-sS'OATP1B3'
+sS'SLCO1B3 gene'
 p5
 S'Q9NPD5,B3KP78'
 p6
-sS'CCK-8'
+sS'OATP1B3'
 p7
-S'E9QEB3'
-p8
-sS'OATP1B3 protein'
-p9
 S'Q9NPD5,B3KP78'
+p8
+sS'CCK-8'
+p9
+S'E9QEB3'
 p10
-sS'OATP1B3 V1'
+sS'OATP1B3 protein'
 p11
 S'Q9NPD5,B3KP78'
 p12
-sS'OATP1B3 WT'
+sS'OATP1B3 V1'
 p13
-S'Q08CU4'
+S'Q9NPD5,B3KP78'
 p14
-ssS'24842107'
+sS'OATP1B3 WT'
 p15
-(dp16
-S'integrin-beta1'
+S'Q08CU4'
+p16
+ssS'10025831'
 p17
-S'F1QG85,Q3YAA1'
-p18
-sS'sialyltransferase'
+(dp18
+S'FDG'
 p19
-S'Q9GU23,Q9W121'
+S'Q53HV7,A0A024RAZ8'
 p20
-sS'integrin-beta1-mediated'
+ssS'24842107'
 p21
-S'P12606'
-p22
+(dp22
+S'integrin-beta1-mediated'
+p23
+S'F1QG85,Q3YAA1'
+p24
+sS'integrin-beta1'
+p25
+S'F1QG85,Q3YAA1'
+p26
+sS'sialyltransferase'
+p27
+S'Q9GU23,Q9W121'
+p28
+ssS'24622518'
+p29
+(dp30
+S'BRG1'
+p31
+S'Q6GP55'
+p32
 ss.
