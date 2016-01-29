@@ -11,6 +11,12 @@ Introduction
 
 - It uses PubMed2Go to build a PostgreSQL database from PubMed XML files that can be downloaded from NCBI.
 
+- PubMed2Go was renamed to PubMedPortable. It is available via the old and the new URLs:
+
+    - https://github.com/KerstenDoering/PubMed2Go
+
+    - https://github.com/KerstenDoering/PubMedPortable
+
 - Start by copying the whole project folder from GitHub to your local disk.
 
 - The pipeline was tested on a Linux system with Ubuntu 14.04.
@@ -24,15 +30,15 @@ Introduction
 Download of PubMed Abstracts
 ****************************
 
-- The title and abstract part of requested PubMed XML documents can be accessed with PubMed2Go:
+- The title and abstract part of requested PubMed XML documents can be accessed with PubMedPortable:
 
-    - https://github.com/KerstenDoering/PubMed2Go/wiki
+    - https://github.com/KerstenDoering/PubMedPortable/wiki
 
-- The PubMed2Go documentation shows how to download a data set and build a PostgreSQL relational database. Follow the installation instructions. The part describing how to build a Xapian full text index is not needed here:
+- The PubMedPortable documentation shows how to download a data set and build a PostgreSQL relational database. Follow the installation instructions. The part describing how to build a Xapian full text index is not needed here:
 
-    - https://github.com/KerstenDoering/PubMed2Go/blob/master/documentation/quick_install.rst
+    - https://github.com/KerstenDoering/PubMedPortable/blob/master/documentation/quick_install.rst
 
-- This documentation refers to the PubMed2Go example data set processing texts which deal with the disease pancreatic cancer.
+- This documentation refers to the PubMedPortable example data set processing texts which deal with the disease pancreatic cancer.
 
 - The script download_articles.py reads the PubMed IDs in the file pubmed_result.txt. Four randomly selected abstracts with the PubMed IDs 10025831, 23215050, 24622518, and 24842107 were selected from the PostgreSQL database and saved in the folder downloaded_abstracts in pseudo XML format using this script. 
 
@@ -151,4 +157,4 @@ Contact
 
     - http://www.pharmaceutical-bioinformatics.de
 
-- This project is published with an ISC license given in "license.txt".
+- This project is published with an ISC license given in "LICENSE.md".
