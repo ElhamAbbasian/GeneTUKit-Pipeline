@@ -63,89 +63,34 @@ def annotate_abstract(abstext,abstitle,pmid):
         ann_out.write(pmid+"\t"+ti_new+"\t\n")
 
 # after tagging, some abstracts contain nested annotations, which has to be fixed
-# at first, all annotations are inserted
-# subsequently, all inner annotations will be removed before the abstract texts are stored in the CSV file
 # this function is called inside annotate_abstract()
-def remove_nested_tagging(ann_text) :
-    #get the list of (start,end) positions which shows the boundaries of annotation
-    #1. find single and inner tags
-    inner_positions =  [(a.start(), a.end()) for a in list(re.finditer('<protein-id="([\w{6}\,]+)">([\w+\-]+)<\/protein-id>',ann_text))]
-    # debug:
-#    print "inner position",inner_positions,"\n"
-
-    #2. find all patterns which have nested tags inside and add them to the positions list
-    nested_positions_typ1 =[(a.start(), a.end()) for a in list(re.finditer('<protein-id="([\w{6}\,]+)">([\w+\-]+)(<protein-id="([\w{6}\,]+)">([\w+\-]+)<\/protein-id>)+<\/protein-id>',ann_text))]
-    nested_positions_typ2 =[(a.start(), a.end()) for a in list(re.finditer('<protein-id="([\w{6}\,]+)">(<protein-id="([\w{6}\,]+)">([\w+\-]+)<\/protein-id>)+([\s\w+\-]+)<\/protein-id>',ann_text))]
-    nested_positions_typ3 =[(a.start(), a.end()) for a in list(re.finditer('<protein-id="([\w{6}\,]+)">(<protein-id="([\w{6}\,]+)">([\w+\-]+)<\/protein-id>)+<\/protein-id>',ann_text))]
-    # debug:
-#    print "outer positions typ1",nested_positions_typ1,"\n"
-#    print "outer positions typ2",nested_positions_typ2,"\n"
-
-    # combine the two lists
-    positions=[]
-    positions+=inner_positions
-    positions+=nested_positions_typ1
-    positions+=nested_positions_typ2
-    positions+=nested_positions_typ3
-
-    # sort positions reversely
-    positions.sort(reverse=True)
-    # debug:
-#    print "list of positions:",positions,"\n"
-
-    # define an empty list as the blacklist, which will contain the inner tags that have to be deleted
-    blacklist=[]
-
-    # iterate over the list of positions list, but check whether there is at least one element in the lists of nested_positions
-    # in the inner_positions there are some nested tags
-    if len(nested_positions_typ1) > 0 or len(nested_positions_typ2) > 0 or len(nested_positions_typ3) > 0 :
-        if len(positions) == 2 :
-            blacklist=inner_positions
-        else:
-            for elemi in range(0,len(positions)-1) :
-                elemj=elemi+1
-                if positions[elemi][0] < positions[elemj][1]:
-                    blacklist.append(positions[elemi])
-
-        # delete the probably repeated items in blacklist
-        blacklist=list(set(blacklist)) 
-        # debug:
-#        print "blacklist=",blacklist
-
-    #check if blacklist is empty, which would mean that there are no nested tags for this text (continue with the next abstract) :
-    if len(blacklist) > 1 :
-        for i in range(0,len(blacklist)) :
-            # check if element i and element i+1 are overlapping
-            j = i+1
-
-            # check separetely whether j is out of the range of i
-            if j == len(blacklist) :
-                syn = re.match('<protein-id="([\w{6}\,]+)">([\w+\-]+)<\/protein-id>',ann_text[blacklist[i][0]:blacklist[i][1]]).group(2)
-                ann_text = ann_text[0:blacklist[i][0]] + syn + ann_text[blacklist[i][1]:]
-            else :
-                if blacklist[i][0] < blacklist[j][1]:
-                    # overlapping tags - first get the synonym inside  and then update the text.
-                    syn = re.match('<protein-id="([\w{6}\,]+)">([\w+\-]+)<\/protein-id>',ann_text[blacklist[i][0]:blacklist[i][1]]).group(2)
-                    ann_text = ann_text[0:blacklist[i][0]] + syn + ann_text[blacklist[i][1]:]
-
-                    # if the element is overlapping with the next pair (element i+1), update the end of the next pair
-                    # it has to be constructed from the length of the last maching pattern (<protein-id=...>...</protein-id>)
-                    blacklist[j][1] -= (blacklist[i][1]-blacklist[i][0]-len(syn))
-
-                else :
-                    # no overlap, just update the text
-                    syn = re.match('<protein-id="([\w{6}\,]+)">([\w+\-]+)<\/protein-id>',ann_text[blacklist[i][0]:blacklist[i][1]]).group(2)
-                    ann_text = ann_text[0:blacklist[i][0]] + syn + ann_text[blacklist[i][1]:]
-
-    elif len(blacklist) == 1 :
-        # in this case, there is no iteration needed, just update the text according to the exsiting pair of tags
-        syn = re.match('<protein-id="([\w{6}\,]+)">([\w+\-]+)<\/protein-id>',ann_text[blacklist[0][0]:blacklist[0][1]]).group(2)
-        # debug:
-#        print syn,"\n"
-        ann_text = ann_text[0:blacklist[0][0]] + syn + ann_text[blacklist[0][1]:]
-
-    # debug:
-#    print ann_text,"\n"
+def remove_nested_tagging(ann_text):
+    # flag is used to repeat the procedure of removing misplaced inner tags
+    flag = True
+    # each time, a nested tag is found, flag is set to True to check the fragment again
+    while flag:
+        # assume that there are no inner tags
+        flag = False
+        # check all pairs of opening and closing tags
+        test = [(a.start(), a.end()) for a in list(re.finditer('<protein-id=\"[A-Z].*?">(.*?)</protein-id>', ann_text))]
+        # sort them reversely such that a later iteration step is still consistent with the positions after text concatenation
+        test.sort(reverse=True)
+        # check whether there is a nested tag inside these pairs
+        # each pair is considered with the first opening and the first closing tag
+        for elem in test:
+            # if the last tag ends with a quotation mark, there are two opening tags
+            test2 = [(a.start(), a.end()) for a in list(re.finditer('\">(.*?)<protein-id=\"[A-Z].*?">(.*?)</protein-id>', ann_text[elem[0]:elem[1]]))]
+            # if there are nested tags, the length of the list is greater than zero
+            if len(test2)>0:
+                # group(0) is the whole text fragment
+                # group(2) is the whole inner text fragment with the nested tags
+                # group(4 ) is the tagged term inside the nested tags
+                # replace the whole inner text fragment in nested tags with the term
+                m = re.search('\">(.*?)((<protein-id=\"[A-Z].*?">)(.*?)(</protein-id>))',ann_text[elem[0]:elem[1]])
+                ann_text = ann_text[0:elem[0]] + ann_text[elem[0]:elem[1]].replace(m.group(2),m.group(4)) + ann_text[elem[1]:]
+                # set flag to True, because there might be more than one inner tag
+                flag = True
+    # return annotated text without misplaced inner tags
     return ann_text
 
 ### MAIN PART OF THE SCRIPT ###
